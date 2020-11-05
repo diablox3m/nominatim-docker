@@ -24,7 +24,11 @@ WORKDIR /app
 
 # Configure postgres
 RUN echo "host all  all    0.0.0.0/0  trust" >> /etc/postgresql/12/main/pg_hba.conf && \
-    echo "listen_addresses='*'" >> /etc/postgresql/12/main/postgresql.conf
+    echo "listen_addresses='*'" >> /etc/postgresql/12/main/postgresql.conf && \
+    echo "max_connections=300" >> /etc/postgresql/12/main/postgresql.conf && \
+    echo "shared_buffers=1024MB" >> /etc/postgresql/12/main/postgresql.conf && \
+    echo "work_mem=50MB" >> /etc/postgresql/12/main/postgresql.conf && \
+    echo "effective_cache_size=2048MB" >> /etc/postgresql/12/main/postgresql.conf
 
 # Osmium install to run continuous updates
 RUN pip3 install osmium
@@ -38,6 +42,7 @@ RUN cd ./src && git checkout tags/$NOMINATIM_VERSION && git submodule update --r
 # Apache configure
 COPY local.php /app/src/build/settings/local.php
 COPY nominatim.conf /etc/apache2/sites-enabled/000-default.conf
+COPY mpm_prefork.conf /etc/apache2/mods-available/mpm_prefork.conf
 
 # Load initial data
 RUN curl http://www.nominatim.org/data/country_grid.sql.gz > /app/src/data/country_osm_grid.sql.gz
